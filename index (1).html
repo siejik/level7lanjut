@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try Out Matematika Lanjut - Level 7</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;color:#0f172a;
+    background:linear-gradient(135deg,#dbeafe,#e0e7ff 40%,#fce7f3);background-attachment:fixed}
+  .blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.55;z-index:-1}
+  .glass{background:rgba(255,255,255,.55);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+    border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 32px rgba(31,38,135,.12),inset 0 1px 0 rgba(255,255,255,.8)}
+  .opt{background:rgba(255,255,255,.6);border:1.5px solid rgba(148,163,184,.35);transition:.2s}
+  .opt:not(:disabled):hover{background:rgba(255,255,255,.95);transform:translateY(-1px);border-color:#6366f1}
+  .opt.ok{background:rgba(34,197,94,.85);color:#fff;border-color:#16a34a}
+  .opt.bad{background:rgba(239,68,68,.85);color:#fff;border-color:#dc2626}
+  .opt.miss{border-color:#16a34a;background:rgba(34,197,94,.18)}
+  .opt.sel{border-color:#6366f1;background:rgba(99,102,241,.15)}
+  .btn{background:linear-gradient(135deg,#6366f1,#3b82f6);color:#fff;transition:.2s}
+  .btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .nv{width:2.2rem;height:2.2rem;border-radius:.7rem;font-size:.8rem;font-weight:600;background:rgba(255,255,255,.6);border:1.5px solid transparent}
+  .nv.cur{border-color:#6366f1}
+  .nv.t{background:#22c55e;color:#fff}.nv.f{background:#ef4444;color:#fff}
+  .fade{animation:f .3s ease}@keyframes f{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="blob w-80 h-80 bg-indigo-400 -top-20 -left-20"></div>
+<div class="blob w-96 h-96 bg-pink-300 bottom-0 right-0"></div>
+<div class="blob w-72 h-72 bg-sky-300 top-1/2 left-1/2"></div>
+
+<main id="app" class="max-w-5xl mx-auto p-4 md:p-8"></main>
+
+<script>
+// ===== BANK SOAL (10 soal dasar, diulang jadi 30 dengan varian kasus 2 & 3) =====
+const BASE=[
+{t:'mc',k:'Pemahaman & Pengetahuan',ctx:'Diberikan matriks A = [[2, -1], [4, 3]].',ind:'Menghitung determinan matriks berukuran 2×2.',q:'Nilai determinan dari matriks A adalah...',o:['10','-10','14','8','2'],a:[0],p:'Determinan matriks 2×2 [[a, b], [c, d]] adalah ad - bc. Maka, det(A) = (2)(3) - (-1)(4) = 6 - (-4) = 10.'},
+{t:'mc',k:'Aplikasi',ctx:'Jika matriks P = [[x, 2], [3, x-1]] merupakan matriks singular (determinan = 0), maka nilai x yang memenuhi adalah...',ind:'Menerapkan konsep determinan untuk menyelesaikan masalah yang melibatkan matriks singular.',q:'Maka nilai x yang memenuhi adalah...',o:['x = -2 atau x = 3','x = 0 atau x = 5','x = -1 atau x = 6','x = 2 atau x = -3','x = 1 atau x = -6'],a:[0],p:'Matriks singular berarti det(P) = 0. det(P) = x(x-1) - (2)(3) = x² - x - 6 = 0. Faktorkan persamaan kuadrat: (x-3)(x+2) = 0. Jadi, nilai x yang memenuhi adalah x = 3 atau x = -2.'},
+{t:'cx',k:'Penalaran',ctx:'Diberikan matriks A = [[1, 2], [0, 3]] dan B = [[-1, 0], [2, 1]]. Jika C = AB,',ind:'Menganalisis hasil operasi perkalian matriks dan sifat-sifatnya.',q:'manakah pernyataan berikut yang benar? (Pilih semua jawaban yang benar)',o:['Matriks C tidak memiliki invers.','Determinan matriks C adalah 9.','Matriks C adalah [[3, 2], [6, 3]].','Berlaku sifat AB = BA.','Invers dari matriks A adalah (1/3)[[3, -2], [0, 1]].'],a:[2,4],p:'C = AB = [[1(-1)+2(2), 1(0)+2(1)], [0(-1)+3(2), 0(0)+3(1)]] = [[3, 2], [6, 3]]. det(C) = 3*3 - 2*6 = 9-12 = -3 (bukan 9). det(A) = 3. A⁻¹ = (1/3)[[3, -2], [0, 1]]. Karena det(C) tidak nol, C punya invers. Sifat perkalian matriks umumnya tidak komutatif (AB ≠ BA).'},
+{t:'mc',k:'Pemahaman & Pengetahuan',ctx:'Diberikan suku banyak P(x) = 2x³ - 5x² + 7x - 1.',ind:'Menerapkan teorema sisa untuk menentukan sisa pembagian polinomial.',q:'Sisa pembagian P(x) oleh (x - 2) adalah...',o:['15','10','-1','9','13'],a:[3],p:'Menurut teorema sisa, sisa pembagian P(x) oleh (x - a) adalah P(a). Jadi, sisa = P(2) = 2(2)³ - 5(2)² + 7(2) - 1 = 2(8) - 5(4) + 14 - 1 = 16 - 20 + 14 - 1 = 9.'},
+{t:'tf',k:'Penalaran',ctx:'Diberikan polinomial P(x) = x³ - 2x² - 5x + 6.',ind:'Mengevaluasi faktor-faktor dari sebuah polinomial.',q:'Evaluasilah pernyataan-pernyataan berikut terkait pemfaktoran P(x). Tentukan apakah pernyataan berikut BENAR atau SALAH.',s:[['(x - 1) adalah salah satu faktor dari P(x).',1],['Jumlah semua akar-akar dari P(x) adalah 2.',1],['P(x) memiliki tiga akar real yang berbeda.',1],['Hasil kali semua akar-akar dari P(x) adalah 6.',0]],p:'P(1) = 1-2-5+6 = 0, jadi (x-1) adalah faktor. Akar-akarnya adalah 1, 3, -2. Jumlah akar = -(-2)/1 = 2. Ada tiga akar real berbeda. Hasil kali akar = -d/a = -6/1 = -6.'},
+{t:'mc',k:'Aplikasi',ctx:'Diberikan vektor u = 2i - 3j + k dan v = i + 2j - 2k.',ind:'Mengaplikasikan rumus proyeksi skalar ortogonal dua vektor.',q:'Hasil dari proyeksi skalar ortogonal vektor u pada v adalah...',o:['2','-6/3','-2','4/3','-4/3'],a:[2],p:'Proyeksi skalar u pada v = (u • v) / |v|. u • v = (2)(1) + (-3)(2) + (1)(-2) = 2 - 6 - 2 = -6. |v| = √(1² + 2² + (-2)²) = √(1+4+4) = √9 = 3. Jadi, proyeksi skalar = -6 / 3 = -2.'},
+{t:'mc',k:'Aplikasi',ctx:'Sebuah lingkaran memiliki persamaan x² + y² - 4x + 6y - 12 = 0.',ind:'Menginterpretasikan persamaan umum lingkaran untuk menemukan pusat dan jari-jarinya.',q:'Pusat dan jari-jari lingkaran tersebut adalah...',o:['Pusat (2, -3) dan jari-jari 5','Pusat (-2, 3) dan jari-jari 4','Pusat (-2, 3) dan jari-jari 5','Pusat (2, -3) dan jari-jari 25','Pusat (4, -6) dan jari-jari 12'],a:[0],p:'Pusat (A/-2, B/-2) = (-4/-2, 6/-2) = (2, -3). Jari-jari r = √( (A/-2)² + (B/-2)² - C ) = √(2² + (-3)² - (-12)) = √(4 + 9 + 12) = √25 = 5.'},
+{t:'mc',k:'Penalaran',ctx:'Titik A(5, -2) dirotasikan sebesar 90° berlawanan arah jarum jam dengan pusat O(0,0), kemudian dilanjutkan dengan refleksi terhadap sumbu-y.',ind:'Memecahkan masalah komposisi transformasi geometri (rotasi dan refleksi).',q:'Koordinat bayangan akhir dari titik A adalah...',o:['(-2, 5)','(-5, -2)','(2, -5)','(2, 5)','(5, 2)'],a:[0],p:"Rotasi 90° [O, 90°]: A(x, y) → A'(-y, x). Jadi A(5, -2) → A'(-(-2), 5) = A'(2, 5). Refleksi terhadap sumbu-y: A'(x, y) → A''(-x, y). Jadi A'(2, 5) → A''(-2, 5)."},
+{t:'mc',k:'Aplikasi',ctx:'Tentukan nilai dari lim (x→2) (x² - 4) / (x² + x - 6).',ind:'Menganalisis dan menyelesaikan limit fungsi aljabar bentuk tak tentu 0/0.',q:'Nilai limit fungsi aljabar tersebut adalah...',o:['0','∞','4/5','1','2/3'],a:[2],p:'Jika disubstitusi langsung, hasilnya 0/0. Maka perlu difaktorkan. lim (x→2) [(x-2)(x+2)] / [(x-2)(x+3)]. Faktor (x-2) bisa dicoret. Menjadi lim (x→2) (x+2) / (x+3) = (2+2) / (2+3) = 4/5.'},
+{t:'mc',k:'Penalaran',ctx:'Tentukan nilai dari lim (x→0) (1 - cos(4x)) / (x tan(2x)).',ind:'Menganalisis dan menyelesaikan limit fungsi trigonometri menggunakan identitas dan sifat limit.',q:'Nilai limit fungsi trigonometri tersebut adalah...',o:['2','1','8','0','4'],a:[4],p:'Gunakan identitas 1 - cos(ax) = 2sin²(ax/2). Jadi, 1 - cos(4x) = 2sin²(2x). Limit menjadi lim (x→0) [2sin²(2x)] / [x tan(2x)]. Ini bisa dipecah menjadi lim (x→0) 2 * [sin(2x)/x] * [sin(2x)/tan(2x)]. Menggunakan sifat limit trigonometri, hasilnya adalah 2 * (2/1) * (2/2) = 4.'}
+];
+
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const TOTAL_TIME=60*60;
+let Q=[],S=[],cur=0,left=TOTAL_TIME,timer=null,finished=false;
+const $=id=>document.getElementById(id);
+const app=$('app');
+
+function build(){
+  Q=[];
+  for(let n=1;n<=3;n++)BASE.forEach(b=>{
+    const x={...b};
+    if(n>1){x.ctx='[Konteks Serupa] '+b.ctx;x.q=b.q+' (kasus '+n+')'+(b.t==='mc'&&n>1?'?':'')}
+    if(b.o){const idx=shuffle(b.o.map((_,i)=>i));x.o=idx.map(i=>b.o[i]);x.a=b.a.map(a=>idx.indexOf(a))}
+    Q.push(x);
+  });
+  S=Q.map(q=>({sel:[],tf:[],done:false,ok:false}));
+  cur=0;left=TOTAL_TIME;finished=false;
+}
+
+function start(){
+  build();clearInterval(timer);
+  timer=setInterval(()=>{left--;const e=$('tm');if(e)e.textContent=fmt(left);if(left<=0)finish()},1000);
+  render();
+}
+const fmt=s=>String(Math.max(0,s)/60|0).padStart(2,'0')+':'+String(Math.max(0,s)%60).padStart(2,'0');
+
+function home(){
+  app.innerHTML=`<div class="glass rounded-3xl p-8 md:p-12 max-w-xl mx-auto mt-10 text-center fade">
+    <div class="text-5xl mb-3">🧮</div>
+    <h1 class="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-transparent">Try Out Matematika Lanjut</h1>
+    <p class="text-slate-600 mt-2 font-medium">Level 7 • Simulasi TKA</p>
+    <div class="grid grid-cols-3 gap-3 my-7 text-sm">
+      <div class="glass rounded-2xl p-3"><b class="text-xl block">30</b>Soal</div>
+      <div class="glass rounded-2xl p-3"><b class="text-xl block">60</b>Menit</div>
+      <div class="glass rounded-2xl p-3"><b class="text-xl block">3</b>Tipe Soal</div>
+    </div>
+    <p class="text-slate-600 text-sm mb-6">Jawaban langsung diperiksa begitu kamu memilih, lengkap dengan pembahasan. Kamu bisa lompat ke soal mana saja.</p>
+    <button onclick="start()" class="btn rounded-2xl px-8 py-3 font-bold text-lg shadow-lg">Mulai Try Out</button>
+  </div>`;
+}
+
+function stats(){
+  const t=S.filter(s=>s.done&&s.ok).length,f=S.filter(s=>s.done&&!s.ok).length;
+  return{t,f,u:Q.length-t-f};
+}
+
+function render(){
+  if(finished)return result();
+  const q=Q[cur],s=S[cur],st=stats();
+  let body='';
+  if(q.t==='mc'){
+    body=q.o.map((o,i)=>{
+      let c='';
+      if(s.done){if(q.a.includes(i))c=s.sel[0]===i?'ok':'miss';else if(s.sel[0]===i)c='bad'}
+      return `<button ${s.done?'disabled':''} onclick="pick(${i})" class="opt ${c} w-full text-left rounded-2xl px-4 py-3.5 mb-3 flex gap-3"><b class="${c==='ok'||c==='bad'?'':'text-indigo-500'}">${'ABCDE'[i]}.</b><span>${o}</span></button>`}).join('');
+  }else if(q.t==='cx'){
+    body='<p class="text-sm text-slate-500 mb-3">Pilih semua jawaban yang benar.</p>'+q.o.map((o,i)=>{
+      const on=s.sel.includes(i),r=q.a.includes(i);let c=on&&!s.done?'sel':'';
+      if(s.done){c=r?(on?'ok':'miss'):(on?'bad':'')}
+      return `<button ${s.done?'disabled':''} onclick="tog(${i})" class="opt ${c} w-full text-left rounded-2xl px-4 py-3.5 mb-3 flex gap-3 items-center"><span class="w-5 h-5 rounded border-2 flex items-center justify-center text-xs shrink-0 ${on?'bg-indigo-500 border-indigo-500 text-white':'border-slate-400'}">${on?'✓':''}</span><span>${o}</span></button>`}).join('')+
+      (s.done?'':`<button onclick="check()" ${s.sel.length?'':'disabled'} class="btn rounded-xl px-6 py-2.5 font-semibold mt-1">Periksa Jawaban</button>`);
+  }else{
+    body='<p class="text-sm text-slate-500 mb-3">Tentukan pilihan yang tepat untuk setiap pernyataan.</p>'+q.s.map((r,i)=>{
+      const v=s.tf[i],d=v!==undefined;
+      const b=(val,l)=>{let c='';if(d){if(r[1]===val)c=v===val?'ok':'miss';else if(v===val)c='bad'}
+        return `<button ${d?'disabled':''} onclick="tfp(${i},${val})" class="opt ${c} rounded-xl px-4 py-2 font-semibold text-sm">${l}</button>`};
+      return `<div class="opt flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-3 flex-wrap"><span class="flex-1 min-w-[180px]">${r[0]}</span><span class="flex gap-2">${b(1,'Benar')}${b(0,'Salah')}</span></div>`}).join('');
+  }
+  const verdict=s.done?`<div class="rounded-2xl px-4 py-2 mb-3 font-bold ${s.ok?'bg-green-500/20 text-green-700':'bg-red-500/20 text-red-700'}">${s.ok?'✅ Jawaban kamu benar!':'❌ Jawaban kamu kurang tepat.'}</div>`:'';
+  const pemb=s.done?`<div class="mt-4 pt-4 border-t border-slate-300/60 fade"><b>Pembahasan:</b><p class="text-slate-700 mt-1 text-sm leading-relaxed">${q.p}</p></div>`:'';
+  const typeName={mc:'Pilihan Ganda',cx:'Pilihan Ganda Kompleks',tf:'Kategori (Benar/Salah)'}[q.t];
+  app.innerHTML=`<div class="grid lg:grid-cols-[1fr_300px] gap-5 fade">
+    <section class="glass rounded-3xl p-5 md:p-7 order-2 lg:order-1">
+      <div class="flex justify-between items-start gap-3 mb-4">
+        <div><h2 class="text-xl font-extrabold">Soal ${cur+1} <span class="text-slate-400 text-base font-semibold">/ ${Q.length}</span></h2><p class="text-xs text-slate-500">${typeName}</p></div>
+        <span class="text-xs font-semibold bg-indigo-500/15 text-indigo-700 rounded-full px-3 py-1">${q.k}</span>
+      </div>
+      <div class="border-l-4 border-indigo-400 bg-white/50 rounded-xl px-4 py-3 italic text-slate-700 mb-3">${q.ctx}</div>
+      <p class="text-xs text-slate-500 mb-3"><b>Indikator:</b> ${q.ind}</p>
+      <p class="font-medium text-lg mb-4">${q.q}</p>
+      ${body}${verdict}${pemb}
+      <div class="flex justify-between mt-6">
+        <button onclick="go(-1)" ${cur===0?'disabled':''} class="btn rounded-xl px-5 py-2.5 font-semibold">← Sebelumnya</button>
+        ${cur===Q.length-1?`<button onclick="finish()" class="btn rounded-xl px-5 py-2.5 font-semibold" style="background:linear-gradient(135deg,#16a34a,#22c55e)">Selesai ✓</button>`:`<button onclick="go(1)" class="btn rounded-xl px-5 py-2.5 font-semibold">Selanjutnya →</button>`}
+      </div>
+    </section>
+    <aside class="order-1 lg:order-2 lg:sticky lg:top-6 self-start">
+      <div class="glass rounded-3xl p-5 text-center">
+        <p class="text-slate-500 text-sm">Sisa Waktu</p>
+        <p id="tm" class="text-4xl font-extrabold ${left<300?'text-red-500':'text-indigo-600'}">${fmt(left)}</p>
+        <div class="flex justify-center gap-4 my-3 text-sm"><span class="text-green-600 font-bold">Benar ${st.t}</span><span class="text-red-500 font-bold">Salah ${st.f}</span><span class="text-slate-500 font-bold">Sisa ${st.u}</span></div>
+        <div class="h-2 rounded-full bg-white/70 overflow-hidden mb-4"><div class="h-full bg-gradient-to-r from-indigo-500 to-sky-400" style="width:${(Q.length-st.u)/Q.length*100}%"></div></div>
+        <div class="flex flex-wrap gap-1.5 justify-center">${Q.map((_,i)=>`<button onclick="jump(${i})" class="nv ${i===cur?'cur':''} ${S[i].done?(S[i].ok?'t':'f'):''}">${i+1}</button>`).join('')}</div>
+        <button onclick="if(confirm('Akhiri try out sekarang?'))finish()" class="mt-4 text-sm text-slate-500 underline">Akhiri try out</button>
+      </div>
+    </aside>
+  </div>`;
+}
+
+function done(ok){S[cur].done=true;S[cur].ok=ok;render()}
+function pick(i){const s=S[cur];if(s.done)return;s.sel=[i];done(Q[cur].a.includes(i))}
+function tog(i){const s=S[cur];if(s.done)return;s.sel=s.sel.includes(i)?s.sel.filter(x=>x!==i):[...s.sel,i];render()}
+function check(){const s=S[cur],a=Q[cur].a;done(s.sel.length===a.length&&a.every(x=>s.sel.includes(x)))}
+function tfp(i,v){const s=S[cur];if(s.done||s.tf[i]!==undefined)return;s.tf[i]=v;
+  const q=Q[cur];if(q.s.every((_,k)=>s.tf[k]!==undefined))done(q.s.every((r,k)=>r[1]===s.tf[k]));else render()}
+function go(d){cur=Math.min(Q.length-1,Math.max(0,cur+d));render();scrollTo({top:0,behavior:'smooth'})}
+function jump(i){cur=i;render();scrollTo({top:0,behavior:'smooth'})}
+
+function finish(){clearInterval(timer);finished=true;result()}
+function result(){
+  const st=stats(),score=Math.round(st.t/Q.length*100),used=TOTAL_TIME-left;
+  const emoji=score>=80?'🏆':score>=60?'👍':'💪';
+  app.innerHTML=`<div class="glass rounded-3xl p-8 max-w-xl mx-auto mt-8 text-center fade">
+    <div class="text-5xl">${emoji}</div>
+    <h2 class="text-2xl font-extrabold mt-2">Hasil Try Out</h2>
+    <p class="text-6xl font-extrabold my-4 bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-transparent">${score}</p>
+    <div class="grid grid-cols-3 gap-3 text-sm mb-4">
+      <div class="glass rounded-2xl p-3"><b class="text-xl text-green-600 block">${st.t}</b>Benar</div>
+      <div class="glass rounded-2xl p-3"><b class="text-xl text-red-500 block">${st.f}</b>Salah</div>
+      <div class="glass rounded-2xl p-3"><b class="text-xl text-slate-500 block">${st.u}</b>Kosong</div>
+    </div>
+    <p class="text-sm text-slate-500 mb-6">Waktu terpakai: ${fmt(used)}</p>
+    <div class="flex gap-3 justify-center flex-wrap">
+      <button onclick="finished=false;cur=0;render()" class="glass rounded-xl px-5 py-2.5 font-semibold">Tinjau Soal</button>
+      <button onclick="start()" class="btn rounded-xl px-5 py-2.5 font-semibold">Ulangi Try Out</button>
+    </div>
+  </div>`;
+}
+home();
+</script>
+</body>
+</html>
